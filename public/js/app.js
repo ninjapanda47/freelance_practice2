@@ -2,7 +2,7 @@
 const latitude = 28.3674739;
 const longitude = -81.5576757;
 const chartInitData = {};
-const allMarkers =[];
+const allMarkers = [];
 
 function getLocations() {
   var response = null;
@@ -40,7 +40,7 @@ function getChartData(uid, figindx) {
   });
   return response;
 }
-
+/*
 function displayMarkers(map, panorama) {
   var locations = getLocations();
 
@@ -144,7 +144,7 @@ function displayMarkers(map, panorama) {
     );
   }
 }
-
+*/
 function setNewPano(position, panorama, status) {
   var streetViewService = new google.maps.StreetViewService();
   streetViewService.getPanorama(
@@ -870,20 +870,7 @@ function initDisplay() {
   };
 
   const map = new google.maps.Map(document.getElementById("map"), mapOptions);
-//add listener after the polygon is drawn
-  function addListener(polygon, markers){
-    google.maps.event.addListener(map, 'click', function(event) {
-      var newPolygon = new google.maps.Polygon({
-        paths: polygon
-      });
-      for (let i =0; i <markers.length; i++){
-        if(google.maps.geometry.poly.containsLocation(markers[i].position, newPolygon)=== true){
-          markers[i].setMap(map);
-        };
-      }
-    });
-  
-  }
+
   //polygon code
   const drawingManager = new google.maps.drawing.DrawingManager({
     drawingMode: google.maps.drawing.OverlayType.MARKER,
@@ -918,7 +905,7 @@ function initDisplay() {
       paths: coordinates
     });
 
-    let allMarkers =[];
+    let allMarkers = [];
     //creates markers
     const locations = getLocations();
     var marker, i;
@@ -932,7 +919,7 @@ function initDisplay() {
       var zip = locations[i].Zip;
       var phone = locations[i].Phone;
       var uid = locations[i].UID;
-  
+
       var latlngset = new google.maps.LatLng(lat, long);
       var marker = new google.maps.Marker({
         map: map,
@@ -940,12 +927,96 @@ function initDisplay() {
         position: latlngset,
         id: uid
       });
-      marker.setMap(null)
-      allMarkers.push(marker) 
-    }
-//Add listener after the polygon is drawn
-    addListener(coordinates,allMarkers);
+      var content =
+        '<div id="content">' +
+        '<div id="siteNotice">' +
+        "</div>" +
+        '<h1 id="firstHeading" class="firstHeading">' +
+        assetname +
+        "</h1>" +
+        '<div id="bodyContent">' +
+        "<br><b>Address:</b>" +
+        addr_loc +
+        "<br><b>City:</b> " +
+        city +
+        "<br><b>State:</b> " +
+        state +
+        "<br><b>Zip Code:</b> " +
+        zip +
+        "<br><b>Phone:</b> " +
+        phone +
+        "</div>" +
+        "</div>";
 
+      var prevWindow = false;
+      google.maps.event.addListener(
+        marker,
+        "click",
+        (function(marker, content, panorama) {
+          return function() {
+            if (prevWindow) {
+              prevWindow.close();
+            }
+            var infowindow = new google.maps.InfoWindow();
+            prevWindow = infowindow;
+            infowindow.setContent(content);
+            infowindow.open(panorama, marker);
+
+            setNewPano(marker.getPosition(), panorama);
+
+            var chart1data = getChartData(marker.id, 1);
+            var chart2data = getChartData(marker.id, 2);
+            var chart3data = getChartData(marker.id, 3);
+            var chart4data = getChartData(marker.id, 4);
+            drawChart(
+              chart1data,
+              "chart1",
+              "Test Label",
+              marker.title,
+              "Test Ylab",
+              "Test Xlab"
+            );
+            drawChart(
+              chart2data,
+              "chart2",
+              "Test Label",
+              marker.title,
+              "Test Ylab",
+              "Test Xlab"
+            );
+            drawChart(
+              chart3data,
+              "chart3",
+              "Test Label",
+              marker.title,
+              "Test Ylab",
+              "Test Xlab"
+            );
+            drawChart(
+              chart4data,
+              "chart4",
+              "Test Label",
+              marker.title,
+              "Test Ylab",
+              "Test Xlab"
+            );
+          };
+        })(marker, content, panorama)
+      );
+      marker.setMap(null);
+      allMarkers.push(marker);
+    }
+    //checks allMarkers to see if it is in the polygon
+    for (j = 0; j < allMarkers.length; j++) {
+      if (
+        google.maps.geometry.poly.containsLocation(
+          allMarkers[j].position,
+          newPolygon
+        ) === true
+      ) {
+        allMarkers[j].setMap(map);
+      }
+    }
   });
 
   var panorama = new google.maps.StreetViewPanorama(
@@ -990,4 +1061,3 @@ function initDisplay() {
     "Test Xlab"
   );
 }
-
