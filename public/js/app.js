@@ -2,6 +2,7 @@
 const latitude = 28.3674739;
 const longitude = -81.5576757;
 const chartInitData = {};
+const allMarkers =[];
 
 function getLocations() {
   var response = null;
@@ -869,7 +870,20 @@ function initDisplay() {
   };
 
   const map = new google.maps.Map(document.getElementById("map"), mapOptions);
-
+//add listener after the polygon is drawn
+  function addListener(polygon, markers){
+    google.maps.event.addListener(map, 'click', function(event) {
+      var newPolygon = new google.maps.Polygon({
+        paths: polygon
+      });
+      for (let i =0; i <markers.length; i++){
+        if(google.maps.geometry.poly.containsLocation(markers[i].position, newPolygon)=== true){
+          markers[i].setMap(map);
+        };
+      }
+    });
+  
+  }
   //polygon code
   const drawingManager = new google.maps.drawing.DrawingManager({
     drawingMode: google.maps.drawing.OverlayType.MARKER,
@@ -892,15 +906,18 @@ function initDisplay() {
   google.maps.event.addListener(drawingManager, "polygoncomplete", function(
     polygon
   ) {
-    var path = polygon.getPath();
-    var coordinates = [];
+    let path = polygon.getPath();
+    let coordinates = [];
     for (let i = 0; i < path.length; i++) {
       coordinates.push({
         lat: path.getAt(i).lat(),
         lng: path.getAt(i).lng()
       });
     }
-    console.log(coordinates);
+    var newPolygon = new google.maps.Polygon({
+      paths: coordinates
+    });
+
     let allMarkers =[];
     //creates markers
     const locations = getLocations();
@@ -923,22 +940,13 @@ function initDisplay() {
         position: latlngset,
         id: uid
       });
-      console.log(marker)
-      const position = marker.getPosition()
-      console.log('positions: '+ marker.getPosition());
-      console.log(coordinates);
-      console.log('containslocations' + google.maps.geometry.poly.containsLocation)
-
-      if (google.maps.geometry.poly.containsLocation(marker.getPosition(), coordinates)) {
-        console.log('true')
-      } else {
-        console.log('false')
-      }
-  
+      marker.setMap(null)
+      allMarkers.push(marker) 
     }
+//Add listener after the polygon is drawn
+    addListener(coordinates,allMarkers);
 
   });
-
 
   var panorama = new google.maps.StreetViewPanorama(
     document.getElementById("pano")
@@ -982,3 +990,4 @@ function initDisplay() {
     "Test Xlab"
   );
 }
+
